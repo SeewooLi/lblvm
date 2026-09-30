@@ -1,0 +1,28 @@
+Package: lblvm
+Title: Latent Variable Modeling with Logit-Beta Models
+Version: 0.0.0.9000
+Authors@R: 
+    person("Seewoo", "Li", 
+    email = "seewooli@g.ucla.edu", 
+    role = c("aut", "cre", "cph"))
+Description: Provides tools for logit-beta latent variable modeling (lblvm), a 
+    latent variable modeling framework that combines a logit link with the beta 
+    distribution. The logit link relates model parameters to observed data, 
+    while the beta distribution models the error component. The framework 
+    supports bounded continuous data and ordered categorical data.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
+Imports: 
+    abind,
+    ggplot2,
+    grid,
+    igraph,
+    mvtnorm,
+    Rcpp,
+    scales,
+    stats
+Config/roxygen2/version: 8.1.0
