@@ -13,9 +13,4 @@ variable models for bounded continuous and ordered categorical data.
 \author{
 \strong{Maintainer}: Seewoo Li \email{seewooli@g.ucla.edu} [copyright holder]
 
-Authors:
-\itemize{
-  \item Seewoo Li \email{seewooli@g.ucla.edu} [copyright holder]
-}
-
 }

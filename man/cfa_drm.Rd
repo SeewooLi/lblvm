@@ -44,7 +44,7 @@ Defaults to \code{0.000001} for \code{EM}, based on the gradient convergence
 criterion, and \code{0.001} for \code{MHRM}, based on the maximum parameter change.
 For \code{EM}, the gradient convergence criterion is defined as
 \eqn{\frac{\mathbf{g}'(\mathbf{H} + \mathbf{J})^{-1}\mathbf{g}}
-{|\log \mathcal{L}| + \delta}}.}
+  {|\log \mathcal{L}| + \delta}}.}
 
 \item{eq_interval}{A logical value indicating whether category intervals
 are equally spaced. Defaults to \code{FALSE}.}

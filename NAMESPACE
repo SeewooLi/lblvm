@@ -2,6 +2,7 @@
 
 export(BF)
 export(Wald_drm)
+export(cfa_cont)
 export(cfa_drm)
 export(cfa_drm_mg)
 export(communality)

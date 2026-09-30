@@ -194,7 +194,7 @@ fit_cont <- function(data, dimension=NULL, range=c(-4,4), q=11, t_prior=0.25, in
                   calculate_m = TRUE)
   return(structure(
     list(par_est=initialitem,
-         se=M[c("se_cov", "se")],
+         se=M,
          fk=E$freq,
          iter=iter,
          quad=grid,

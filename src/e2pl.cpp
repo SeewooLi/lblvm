@@ -328,8 +328,7 @@ List cont_L1L2_cpp(const arma::vec& item,
     nu * q[m] * S;
 
     const double L_eta_eta =
-      nu * q[m] * (1.0 - 2.0 * mu[m]) * S
-    - (nu * q[m]) * (nu * q[m])
+      - (nu * q[m]) * (nu * q[m])
       * f[m] * (ta[m] + tb[m]);
 
       const double L_xi =
@@ -340,17 +339,10 @@ List cont_L1L2_cpp(const arma::vec& item,
       );
 
       const double L_eta_xi =
-        nu * q[m] * (
-            S
-            - f[m] * (
-                alpha[m] * ta[m]
-      - beta[m] * tb[m]
-            )
-        );
+        - nu * q[m] * f[m] * (alpha[m] * ta[m] - beta[m] * tb[m]);
 
       const double L_xi_xi =
-        L_xi
-        + nu * nu * f[m] * trigamma_nu
+        nu * nu * f[m] * trigamma_nu
       - f[m] * (
           alpha[m] * alpha[m] * ta[m]
       + beta[m] * beta[m] * tb[m]
@@ -454,6 +446,8 @@ List cont_L1L2_cpp(const arma::vec& item,
 
       const double post = Pk(i, m);
 
+      const double qmm = nu * mu[m] * (1.0 - mu[m]);
+
       if (post == 0.0)
         continue;
 
@@ -467,7 +461,7 @@ List cont_L1L2_cpp(const arma::vec& item,
         log_1x - db[m];
 
       const double temp =
-        w1 - w2;
+        qmm * (w1 - w2);
 
       const double score_xi =
         nu * (
@@ -584,6 +578,8 @@ for (int i = 0; i < N; ++i) {
 
     const double post = Pk(i, m);
 
+    const double qmm = nu * mu[m] * (1.0 - mu[m]);
+
     if (post == 0.0)
       continue;
 
@@ -596,7 +592,7 @@ for (int i = 0; i < N; ++i) {
       log_1x - db[m];
 
     const double temp =
-      w1 - w2;
+      qmm * (w1 - w2);
 
     const double score_xi =
       nu * (
