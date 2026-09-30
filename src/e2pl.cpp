@@ -1,4 +1,11 @@
 #include <RcppArmadillo.h>
+#include <cmath>
+#include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 using namespace Rcpp;
 using namespace arma;
 
@@ -204,6 +211,7 @@ z <- matrix(aaa$posterior[1,], nrow = length(x), ncol = length(y))
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
 // [[Rcpp::export]]
 List cont_L1L2_cpp(const arma::vec& item,
                    const arma::mat& grid,
@@ -214,9 +222,9 @@ List cont_L1L2_cpp(const arma::vec& item,
   const int N = data.n_elem;
   const int M = grid.n_rows;
   const int D = grid.n_cols;
+  const int P = D + 2;
 
   const double P_EPS = 1e-12;
-
 
   const arma::vec a = item.head(D);
   const double c = item[D];
@@ -224,9 +232,50 @@ List cont_L1L2_cpp(const arma::vec& item,
   const double xi = item[D + 1];
   const double nu = std::exp(xi);
 
-  // nu does not depend on m
   const double digamma_nu  = R::digamma(nu);
   const double trigamma_nu = R::trigamma(nu);
+
+
+  arma::vec mu(M);
+  arma::vec q(M);
+
+  arma::vec alpha(M);
+  arma::vec beta(M);
+
+  arma::vec da(M);
+  arma::vec db(M);
+
+  arma::vec ta(M);
+  arma::vec tb(M);
+
+  for (int m = 0; m < M; ++m) {
+
+    const double eta =
+      arma::dot(grid.row(m), a) + c;
+
+    // Stable logistic transformation
+    if (eta >= 0.0) {
+
+      const double e = std::exp(-eta);
+      mu[m] = 1.0 / (1.0 + e);
+
+    } else {
+
+      const double e = std::exp(eta);
+      mu[m] = e / (1.0 + e);
+    }
+
+    q[m] = mu[m] * (1.0 - mu[m]);
+
+    alpha[m] = nu * mu[m];
+    beta[m]  = nu * (1.0 - mu[m]);
+
+    da[m] = R::digamma(alpha[m]);
+    db[m] = R::digamma(beta[m]);
+
+    ta[m] = R::trigamma(alpha[m]);
+    tb[m] = R::trigamma(beta[m]);
+  }
 
 
   // Sufficient statistics from the E-step
@@ -263,220 +312,386 @@ List cont_L1L2_cpp(const arma::vec& item,
 
   // Gradient and Hessian
 
-  arma::vec L1(D + 2, fill::zeros);
-  arma::mat H(D + 2, D + 2, fill::zeros);
-
+  arma::vec L1(P, fill::zeros);
+  arma::mat H(P, P, fill::zeros);
 
   for (int m = 0; m < M; ++m) {
 
-    // eta = theta'a + c
     const arma::rowvec theta = grid.row(m);
-    const double eta = arma::dot(theta, a) + c;
-
-    // Stable logistic transformation
-    double mu;
-
-    if (eta >= 0.0) {
-      const double e = std::exp(-eta);
-      mu = 1.0 / (1.0 + e);
-    } else {
-      const double e = std::exp(eta);
-      mu = e / (1.0 + e);
-    }
-
-    const double q = mu * (1.0 - mu);
-
-    const double alpha = nu * mu;
-    const double beta  = nu * (1.0 - mu);
-
-    const double da = R::digamma(alpha);
-    const double db = R::digamma(beta);
-
-    const double ta = R::trigamma(alpha);
-    const double tb = R::trigamma(beta);
-
-
-    // Derivatives with respect to eta
 
     const double S =
       s1[m]
     - s2[m]
-    - f[m] * (da - db);
+    - f[m] * (da[m] - db[m]);
 
     const double L_eta =
-    nu * q * S;
+    nu * q[m] * S;
 
     const double L_eta_eta =
-      nu * q * (1.0 - 2.0 * mu) * S
-    - (nu * q) * (nu * q)
-      * f[m] * (ta + tb);
+      nu * q[m] * (1.0 - 2.0 * mu[m]) * S
+    - (nu * q[m]) * (nu * q[m])
+      * f[m] * (ta[m] + tb[m]);
 
-
-    const double L_xi =
-    nu * (
-        f[m] * digamma_nu
-    + mu * (s1[m] - f[m] * da)
-      + (1.0 - mu) * (s2[m] - f[m] * db)
-    );
-
-    const double L_eta_xi =
-      nu * q * (
-          S
-          - f[m] * (
-              alpha * ta
-    - beta * tb
-          )
+      const double L_xi =
+      nu * (
+          f[m] * digamma_nu
+      + mu[m] * (s1[m] - f[m] * da[m])
+        + (1.0 - mu[m]) * (s2[m] - f[m] * db[m])
       );
 
-    const double L_xi_xi =
-      L_xi
-      + nu * nu * f[m] * trigamma_nu
-    - f[m] * (
-        alpha * alpha * ta
-    + beta * beta * tb
-    );
+      const double L_eta_xi =
+        nu * q[m] * (
+            S
+            - f[m] * (
+                alpha[m] * ta[m]
+      - beta[m] * tb[m]
+            )
+        );
+
+      const double L_xi_xi =
+        L_xi
+        + nu * nu * f[m] * trigamma_nu
+      - f[m] * (
+          alpha[m] * alpha[m] * ta[m]
+      + beta[m] * beta[m] * tb[m]
+      );
+
+      for (int j = 0; j < D; ++j)
+        L1[j] += theta[j] * L_eta;
+
+      L1[D] += L_eta;
+      L1[D + 1] += L_xi;
 
 
-    // Gradient
+      for (int j = 0; j < D; ++j) {
 
-    for (int j = 0; j < D; ++j)
-      L1[j] += theta[j] * L_eta;
+        for (int k = 0; k < D; ++k)
+          H(j, k) +=
+            L_eta_eta * theta[j] * theta[k];
 
-    L1[D] += L_eta;
+        H(j, D) +=
+          L_eta_eta * theta[j];
 
-    L1[D + 1] += L_xi;
+        H(D, j) +=
+          L_eta_eta * theta[j];
+      }
 
+      H(D, D) += L_eta_eta;
 
-    // Hessian
+      for (int j = 0; j < D; ++j) {
 
-    for (int j = 0; j < D; ++j) {
+        H(j, D + 1) +=
+          L_eta_xi * theta[j];
 
-      for (int k = 0; k < D; ++k)
-        H(j, k) +=
-          L_eta_eta * theta[j] * theta[k];
+        H(D + 1, j) +=
+          L_eta_xi * theta[j];
+      }
 
-      H(j, D) +=
-        L_eta_eta * theta[j];
+      H(D, D + 1) += L_eta_xi;
+      H(D + 1, D) += L_eta_xi;
 
-      H(D, j) +=
-        L_eta_eta * theta[j];
-    }
-
-    H(D, D) += L_eta_eta;
-
-    for (int j = 0; j < D; ++j) {
-
-      H(j, D + 1) +=
-        L_eta_xi * theta[j];
-
-      H(D + 1, j) +=
-        L_eta_xi * theta[j];
-    }
-
-    H(D, D + 1) += L_eta_xi;
-    H(D + 1, D) += L_eta_xi;
-
-    H(D + 1, D + 1) += L_xi_xi;
+      H(D + 1, D + 1) += L_xi_xi;
   }
 
 
-  // Missing information matrix
-
-  if (calculate_m) {
-
-    arma::mat IMm;
-    IMm.zeros(D + 2, D + 2);
-
-    for (int i = 0; i < N; ++i) {
-
-      if (!std::isfinite(data[i]))
-        continue;
-
-      double x = data[i];
-
-      x = std::min(
-        std::max(x, P_EPS),
-        1.0 - P_EPS
-      );
-
-      const double log_x  = std::log(x);
-      const double log_1x = std::log1p(-x);
-
-      // E[S | x]
-      arma::vec score_mean(D + 2, fill::zeros);
-
-      // E[S S' | x]
-      arma::mat score_second(D + 2, D + 2, fill::zeros);
-
-      for (int m = 0; m < M; ++m) {
-
-        const double post = Pk(i, m);
-
-        if (post == 0.0)
-          continue;
-
-        const arma::rowvec theta = grid.row(m);
-
-        const double eta =
-          arma::dot(theta, a) + c;
-
-        // Stable logistic transformation
-        double mu;
-
-        if (eta >= 0.0) {
-          const double e = std::exp(-eta);
-          mu = 1.0 / (1.0 + e);
-        } else {
-          const double e = std::exp(eta);
-          mu = e / (1.0 + e);
-        }
-
-        const double alpha = nu * mu;
-        const double beta  = nu * (1.0 - mu);
-
-        const double da = R::digamma(alpha);
-        const double db = R::digamma(beta);
-
-        const double w1 = log_x  - da;
-        const double w2 = log_1x - db;
-
-        const double temp = w1 - w2;
-
-        // Complete-data score conditional on latent m
-        arma::vec score(D + 2);
-
-        for (int d = 0; d < D; ++d)
-          score[d] = theta[d] * temp;
-
-        score[D] = temp;
-
-        // Score with respect to xi = log(nu)
-        score[D + 1] =
-          nu * (
-              digamma_nu
-              + mu * w1
-        + (1.0 - mu) * w2
-          );
-
-        score_mean += post * score;
-        score_second += post * (score * score.t());
-      }
-
-      // Var(S | x)
-      IMm += score_second
-      - score_mean * score_mean.t();
-    }
-    return List::create(
-      _["gradient"] = L1,
-      _["hessian"]  = H,
-      _["IMm"]      = IMm
-    );
-
-  } else {
+  if (!calculate_m) {
 
     return List::create(
       _["gradient"] = L1,
       _["hessian"]  = H
     );
   }
+
+
+  // Missing information matrix
+
+  arma::mat IMm(P, P, fill::zeros);
+
+#ifdef _OPENMP
+
+  const int n_threads = omp_get_max_threads();
+
+  std::vector<arma::mat> IMm_thread(
+      n_threads,
+      arma::mat(P, P, fill::zeros)
+  );
+
+#pragma omp parallel
+{
+
+  const int tid = omp_get_thread_num();
+
+  arma::mat& IMm_local = IMm_thread[tid];
+
+#pragma omp for schedule(static)
+
+  for (int i = 0; i < N; ++i) {
+
+    if (!std::isfinite(data[i]))
+      continue;
+
+    double x = data[i];
+
+    x = std::min(
+      std::max(x, P_EPS),
+      1.0 - P_EPS
+    );
+
+    const double log_x  = std::log(x);
+    const double log_1x = std::log1p(-x);
+
+
+    // E[S | x]
+
+    arma::vec score_mean(P, fill::zeros);
+
+    // E[S S' | x]
+
+    arma::mat score_second(P, P, fill::zeros);
+
+
+    for (int m = 0; m < M; ++m) {
+
+      const double post = Pk(i, m);
+
+      if (post == 0.0)
+        continue;
+
+      const arma::rowvec theta = grid.row(m);
+
+
+      const double w1 =
+        log_x - da[m];
+
+      const double w2 =
+        log_1x - db[m];
+
+      const double temp =
+        w1 - w2;
+
+      const double score_xi =
+        nu * (
+            digamma_nu
+            + mu[m] * w1
+      + (1.0 - mu[m]) * w2
+        );
+
+
+      const double wt =
+        post * temp;
+
+      for (int d = 0; d < D; ++d)
+        score_mean[d] +=
+          wt * theta[d];
+
+      score_mean[D] += wt;
+
+      score_mean[D + 1] +=
+        post * score_xi;
+
+
+      const double wtt =
+        post * temp * temp;
+
+      const double wtx =
+        post * temp * score_xi;
+
+      const double wxx =
+        post * score_xi * score_xi;
+
+
+      for (int d = 0; d < D; ++d) {
+
+        for (int k = 0; k < D; ++k) {
+
+          score_second(d, k) +=
+            wtt * theta[d] * theta[k];
+        }
+      }
+
+
+      for (int d = 0; d < D; ++d) {
+
+        score_second(d, D) +=
+          wtt * theta[d];
+
+        score_second(D, d) +=
+          wtt * theta[d];
+      }
+
+
+      for (int d = 0; d < D; ++d) {
+
+        score_second(d, D + 1) +=
+          wtx * theta[d];
+
+        score_second(D + 1, d) +=
+          wtx * theta[d];
+      }
+
+
+      score_second(D, D) +=
+        wtt;
+
+      score_second(D, D + 1) +=
+        wtx;
+
+      score_second(D + 1, D) +=
+        wtx;
+
+      score_second(D + 1, D + 1) +=
+        wxx;
+    }
+
+
+    IMm_local +=
+      score_second
+      - score_mean * score_mean.t();
+  }
+}
+
+
+// Reduce thread-local matrices
+
+for (int t = 0; t < n_threads; ++t)
+  IMm += IMm_thread[t];
+
+#else
+
+// Serial fallback
+
+for (int i = 0; i < N; ++i) {
+
+  if (!std::isfinite(data[i]))
+    continue;
+
+  double x = data[i];
+
+  x = std::min(
+    std::max(x, P_EPS),
+    1.0 - P_EPS
+  );
+
+  const double log_x  = std::log(x);
+  const double log_1x = std::log1p(-x);
+
+
+  arma::vec score_mean(P, fill::zeros);
+  arma::mat score_second(P, P, fill::zeros);
+
+
+  for (int m = 0; m < M; ++m) {
+
+    const double post = Pk(i, m);
+
+    if (post == 0.0)
+      continue;
+
+    const arma::rowvec theta = grid.row(m);
+
+    const double w1 =
+      log_x - da[m];
+
+    const double w2 =
+      log_1x - db[m];
+
+    const double temp =
+      w1 - w2;
+
+    const double score_xi =
+      nu * (
+          digamma_nu
+          + mu[m] * w1
+    + (1.0 - mu[m]) * w2
+      );
+
+
+    // ------------------------------------------------------------
+    // E[S | x]
+    // ------------------------------------------------------------
+
+    const double wt =
+      post * temp;
+
+    for (int d = 0; d < D; ++d)
+      score_mean[d] +=
+        wt * theta[d];
+
+    score_mean[D] += wt;
+
+    score_mean[D + 1] +=
+      post * score_xi;
+
+
+    // ------------------------------------------------------------
+    // E[S S' | x]
+    // ------------------------------------------------------------
+
+    const double wtt =
+      post * temp * temp;
+
+    const double wtx =
+      post * temp * score_xi;
+
+    const double wxx =
+      post * score_xi * score_xi;
+
+
+    for (int d = 0; d < D; ++d) {
+
+      for (int k = 0; k < D; ++k) {
+
+        score_second(d, k) +=
+          wtt * theta[d] * theta[k];
+      }
+    }
+
+
+    for (int d = 0; d < D; ++d) {
+
+      score_second(d, D) +=
+        wtt * theta[d];
+
+      score_second(D, d) +=
+        wtt * theta[d];
+
+      score_second(d, D + 1) +=
+        wtx * theta[d];
+
+      score_second(D + 1, d) +=
+        wtx * theta[d];
+    }
+
+
+    score_second(D, D) +=
+      wtt;
+
+    score_second(D, D + 1) +=
+      wtx;
+
+    score_second(D + 1, D) +=
+      wtx;
+
+    score_second(D + 1, D + 1) +=
+      wxx;
+  }
+
+
+  IMm +=
+    score_second
+    - score_mean * score_mean.t();
+}
+
+#endif
+
+
+// ================================================================
+// Return
+// ================================================================
+
+return List::create(
+  _["gradient"] = L1,
+  _["hessian"]  = H,
+  _["IMm"]      = IMm
+);
 }
