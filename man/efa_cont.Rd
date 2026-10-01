@@ -2,7 +2,7 @@
 % Please edit documentation in R/continuous.R
 \name{efa_cont}
 \alias{efa_cont}
-\title{Title}
+\title{Run an exploratory factor analysis (EFA) for bounded-continuous responses}
 \usage{
 efa_cont(
   data,
@@ -14,8 +14,45 @@ efa_cont(
 )
 }
 \arguments{
-\item{threshold}{}
+\item{data}{A matrix or data frame of continuous item responses.}
+
+\item{dimension}{An integer specifying the number of dimensions of the
+latent variables.}
+
+\item{range}{A numeric vector specifying the range of latent trait values
+for grid approximation in each dimension. Defaults to \code{c(-4, 4)}.}
+
+\item{q}{An integer specifying the number of grid points per latent trait
+dimension for grid approximation. Defaults to \code{41}.}
+
+\item{max_iter}{An integer specifying the maximum number of iterations for
+the expectation-maximization (EM) algorithm. Defaults to \code{200}.}
+
+\item{threshold}{A numeric value specifying the convergence threshold on
+the maximum parameter change. Defaults to \code{0.0001}.}
+}
+\value{
+A list containing the following objects:
+\describe{
+\item{par_est}{Estimated item parameters.}
+\item{se}{Standard errors of the item parameter estimates.}
+\item{fk}{Expected frequency (number of respondents) at each quadrature
+grid point.}
+\item{iter}{Number of EM algorithm iterations.}
+\item{quad}{Locations of the quadrature grid points.}
+\item{diff}{Value of the convergence criterion at the final iteration.}
+\item{prior}{Prior density at each quadrature grid point.}
+\item{posterior}{Posterior density at each quadrature grid point per respondent.}
+\item{Ak}{Posterior weight at each quadrature grid point.}
+\item{theta}{Expected a posteriori (EAP) estimates of the latent traits
+for each respondent.}
+\item{theta_se}{Standard errors of the EAP latent trait estimates.}
+\item{logL}{Approximated log-likelihood at the final iteration.}
+\item{f_means}{Estimated means of the latent factors.}
+\item{cov_mat}{Estimated covariance matrix of the latent factors.}
+\item{Options}{Input information used to call the function.}
+}
 }
 \description{
-Title
+Run an exploratory factor analysis (EFA) for bounded-continuous responses
 }

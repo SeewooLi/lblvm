@@ -7,7 +7,7 @@
 efa_drm(
   data,
   dimension,
-  t_prior = 0.25,
+  t_prior = NULL,
   range = c(-4, 4),
   q = 41,
   ngrid = 1000,

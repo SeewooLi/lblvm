@@ -47,7 +47,31 @@ cut_trans <- function(x){
 ################################################################################
 # Internal Functions
 ################################################################################
+check_data_cont <- function(data) {
 
+  if (!is.matrix(data) && !is.data.frame(data)) {
+    stop("`data` must be a matrix or data frame.")
+  }
+
+  if (any(data < 0 | data > 1)) {
+    stop("All values in `data` must be between 0 and 1.")
+  }
+
+  return(as.matrix(data))
+}
+
+check_data_cat <- function(data) {
+
+  if (!is.matrix(data) && !is.data.frame(data)) {
+    stop("`data` must be a matrix or data frame.")
+  }
+
+  if (any(data <= 0) || any(data != floor(data))) {
+    stop("All values in `data` must be positive integers.")
+  }
+
+  return(reorder_mat(as.matrix(data)))
+}
 
 one_hot_3d <- function(M) {
   N <- nrow(M)            # number of persons
@@ -116,7 +140,15 @@ calculate_J <- function(psi,threshold) {
 
 
 transform_group <- function(data, group) {
-
+  t_sd_group <- function(data, label){
+    t_sd_vec <- c()
+    lab <- sort(unique(label))
+    for(i in lab){
+      data_temp <- data[label == i, , drop = FALSE]
+      t_sd_vec <- append(t_sd_vec, t_prior_sd(N = nrow(data_temp), category = apply(X = data_temp, MARGIN = 2, FUN = max)))
+    }
+    return(t_sd_vec)
+  }
   if (nrow(data) != length(group)) {
     stop("Length of `group` must match number of rows in `data`.")
   }
@@ -127,13 +159,18 @@ transform_group <- function(data, group) {
   group_filtered <- group[keep]
   if(sum(!keep) != 0) message(sum(!keep), " NA observations in `group` are excluded.")
 
+  # calculate threshold prior
+  t_prior <- t_sd_group(data_filtered, group_filtered)
+
+
   # INTEGER CASE
   if (is.integer(group_filtered)) {
 
     return(list(
       data = data_filtered,
       group_int = group_filtered,
-      group_char = NULL
+      group_char = NULL,
+      t_prior = t_prior
     ))
   }
 
@@ -148,7 +185,8 @@ transform_group <- function(data, group) {
     return(list(
       data = data_filtered,
       group_int  = group_int,
-      group_char = group_char
+      group_char = group_char,
+      t_prior = t_prior
     ))
   }
 
@@ -161,7 +199,8 @@ transform_group <- function(data, group) {
     return(list(
       data = data_filtered,
       group_int  = group_int,
-      group_char = group_char
+      group_char = group_char,
+      t_prior = t_prior
     ))
   }
 

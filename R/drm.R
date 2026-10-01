@@ -53,8 +53,9 @@
 #'
 #' @export
 #'
-efa_drm <- function(data,dimension,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,max_iter=NULL,
+efa_drm <- function(data,dimension,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,max_iter=NULL,
                     threshold=NULL, eq_interval = FALSE, estimation="EM"){
+
   if(is.null(threshold)){
     if(estimation == "EM"){
       threshold <- 0.000001
@@ -70,7 +71,10 @@ efa_drm <- function(data,dimension,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,ma
     }
   }
 
-  data <- reorder_mat(as.matrix(data))
+  # checking and reordering responses
+  data <- check_data_cat(data)
+
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max))
 
   helper_matrices <- efa_helper_matrices(dimension, data, eq_interval = eq_interval)
 
@@ -154,8 +158,25 @@ efa_drm <- function(data,dimension,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,ma
 #'
 #' @export
 #'
-cfa_drm <- function(formula,data,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,max_iter=NULL,
+#' @examples
+#' \donttest{
+#' \dontrun{
+#' # Items 1--5 on the first factor and the rest on the second factor
+#' formula_string <- "
+#' f1 ~ v1+v2+v3+v4+v5
+#' f2 ~ v6+v7+v8+v9+v10
+#'
+#' v1.f1==v2.f1==v3.f1==v4.f1==v5.f1  # equality constraint
+#'
+#' v1.c <- 0  # fixed value
+#' "
+#'
+#'
+#' fit <- cfa_drm(formula_string, data)
+#' }}
+cfa_drm <- function(formula,data,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,max_iter=NULL,
                     threshold=NULL, eq_interval = FALSE, estimation="EM",est_cov = TRUE){
+
   if(is.null(threshold)){
     if(estimation == "EM"){
       threshold <- 0.000001
@@ -171,8 +192,10 @@ cfa_drm <- function(formula,data,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,max_
     }
   }
 
+  # checking and reordering responses
+  data <- check_data_cat(data)
 
-  data <- reorder_mat(as.matrix(data))
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max))
 
   helper_matrices <- cfa_helper_matrices(formula, data, eq_interval = eq_interval)
 
@@ -252,16 +275,17 @@ cfa_drm <- function(formula,data,t_prior=0.25,range=c(-4,4),q=41,ngrid=1000,max_
 #'
 #' @export
 #'
-cfa_drm_mg <- function(formula,data,group,t_prior=c(0,0.25),range=c(-4,4),q=41,ngrid=1000,max_iter=200,
+cfa_drm_mg <- function(formula,data,group,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,max_iter=200,
                       threshold=0.000001, eq_interval = FALSE,est_cov = TRUE){
 
-  # reordering responses
-  data <- reorder_mat(as.matrix(data))
+  # checking and reordering responses
+  data <- check_data_cat(data)
 
   # grouping
   grouped <- transform_group(data, group)
   data <- grouped$data
   group <- grouped$group_int
+  if(is.null(t_prior)) t_prior <- grouped$t_prior
 
   helper_matrices <- group_helper_matrices(formula,
                                            data,

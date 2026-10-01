@@ -8,7 +8,7 @@ cfa_drm_mg(
   formula,
   data,
   group,
-  t_prior = c(0, 0.25),
+  t_prior = NULL,
   range = c(-4, 4),
   q = 41,
   ngrid = 1000,

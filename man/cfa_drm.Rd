@@ -7,7 +7,7 @@
 cfa_drm(
   formula,
   data,
-  t_prior = 0.25,
+  t_prior = NULL,
   range = c(-4, 4),
   q = 41,
   ngrid = 1000,
@@ -85,4 +85,21 @@ When \code{estimation = "EM"}, the returned list also contains:
 }
 \description{
 Run a confirmatory factor analysis (CFA) using the discretized response model (DRM)
+}
+\examples{
+\donttest{
+\dontrun{
+# Items 1--5 on the first factor and the rest on the second factor
+formula_string <- "
+f1 ~ v1+v2+v3+v4+v5
+f2 ~ v6+v7+v8+v9+v10
+
+v1.f1==v2.f1==v3.f1==v4.f1==v5.f1  # equality constraint
+
+v1.c <- 0  # fixed value
+"
+
+
+fit <- cfa_drm(formula_string, data)
+}}
 }
