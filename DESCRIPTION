@@ -4,7 +4,8 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Seewoo", "Li", 
     email = "seewooli@g.ucla.edu", 
-    role = c("aut", "cre", "cph"))
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0002-6290-2777"))
 Description: Provides tools for logit-beta latent variable modeling (lblvm), a 
     latent variable modeling framework that combines a logit link with the beta 
     distribution. The logit link relates model parameters to observed data, 
@@ -30,3 +31,4 @@ RoxygenNote: 7.3.3
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+URL: https://seewooli.github.io/lblvm/

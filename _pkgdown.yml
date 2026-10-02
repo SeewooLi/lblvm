@@ -1,0 +1,31 @@
+url: https://seewooli.github.io/lblvm/
+template:
+  bootstrap: 5
+
+reference:
+- title: Model Fitting
+  desc: >
+    Parameter estimation.
+  contents:
+  - lblvm
+  - efa_cont
+  - efa_drm
+  - cfa_cont
+  - cfa_drm
+  - cfa_drm_mg
+- title: Model Comparison
+  contents:
+  - local_rmsea
+  - rmsea_drm
+  - BF
+  - Wald_drm
+- title: misc
+  contents:
+  - t_prior_sd
+  - communality
+  - cut_trans
+- title: Visualization
+  contents:
+  - plot_DRM
+  - plot_DRM_compare
+
