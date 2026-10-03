@@ -1,0 +1,287 @@
+---
+title: "Models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(ggplot2)
+library(tidyverse)
+library(gridExtra)
+```
+
+
+This vignette describes the two latent variable models implemented in
+`lblvm`: the **bounded-continuous response model** and the **discretized
+response model (DRM)**. Both models use the same logit-beta framework, but
+differ in how the response is observed.
+
+```{r, fig.cap="**Figure 1** Bounded-continuous response model in Panel (a) and discretized response model in Panel (b). The black solid lines in the two panels are identical and are the $\\mu$-curves. The grey curves represent the probability densities of continuous item responses in Panel (a) and those of internal judgment continuum in Panel (b). The grey line segments, located exactly on the $\\mu$-curve, indicate the means of the densities. The relative width of the color bands in Panel (b) can be estimated in the discretized response model.", fig.width=12, fig.height=5, out.width="100%", fig.align='left', echo=FALSE, warning=FALSE, message=FALSE}
+P <- function(theta,a=1,b,c=0){
+  c+(1-c)*(1/(1+exp(-a*(theta-b))))
+}
+nu <- 10
+apar <- 1
+bpar <- 0
+item_par <- c(apar,bpar,nu)#x$par_est[item.number,]
+
+# Continuous IRT & DRM
+
+probs <- P(theta = seq(-6,6,0.1),
+           a = item_par[1],
+           b = item_par[2])
+lower.ci <- stats::qbeta(.025, item_par[3]*probs, (1-probs)*item_par[3])
+upper.ci <- stats::qbeta(.975, item_par[3]*probs, (1-probs)*item_par[3])
+p_df <- data.frame(response = c(probs, lower.ci, upper.ci),
+                   theta = rep(seq(-6,6,0.1), 3),
+                   type = rep(c("Mean", "C.I. (2.5%)", "C.I. (97.5%)"), each = 121))
+
+ppp <-
+  ggplot2::ggplot()+
+  ggplot2::geom_line(mapping = aes(x=p_df[p_df$type=="Mean","theta"],y=p_df[p_df$type=="Mean","response"]), linewidth=1.5)+
+  ggplot2::lims(y=c(0,1))
+
+for(i in c(-2, -1, 0, 1, 2)){
+  prob_irt <- P(i, apar,bpar)
+  alpha <- prob_irt*nu
+  beta <- (1-prob_irt)*nu
+  xxx <- seq(0.00000001, 0.99999999, 0.0001)
+  ddf <- data.frame(x = xxx, y = i-(dbeta(xxx, alpha, beta))*sqrt(prob_irt*(1-prob_irt))/2)
+  ddf2 <- data.frame(x=c(i-(dbeta(prob_irt, alpha, beta))*sqrt(prob_irt*(1-prob_irt))/2, i), y=rep(prob_irt,2))
+
+  ppp <- ppp+
+    geom_path(data = ddf %>% arrange(x), aes(x = y, y = x),
+              linewidth=1, alpha = 1, inherit.aes = FALSE, color="darkgrey", linetype = "solid")+
+    geom_path(data = ddf2, aes(x = x, y = y),
+              linewidth=1, alpha = 1, inherit.aes = FALSE, color="darkgrey", linetype = "solid")
+}
+
+ppp_cont <- ppp+
+  geom_hline(yintercept = 0, color="grey", size=1)+
+  geom_hline(yintercept = 1, color="grey", size=1)+
+  annotate("segment",
+           x = c(-2, -1, 0, 1, 2),
+           xend = c(-2, -1, 0, 1, 2),
+           y=0,
+           yend=1,
+           color="grey",
+           size=1,
+           linetype="dashed")+
+  scale_x_continuous(breaks= -3:3)+
+  coord_cartesian(xlim= c(-3,3))+
+  scale_y_continuous(breaks= (0:5)/5,limits = c(0,1))+
+  ggplot2::labs(
+    title = "(a) Bounded Continuous Response",#sprintf("Item %i", item.number),
+    x = expression(theta),
+    y = "response")+
+  ggplot2::theme_bw()
+
+ppp_drm <- ppp+
+  geom_hline(yintercept = 0, color="grey", size=1)+
+  geom_hline(yintercept = 1, color="grey", size=1)+
+  annotate("segment",
+           x = c(-2, -1, 0, 1, 2),
+           xend = c(-2, -1, 0, 1, 2),
+           y=0,
+           yend=1,
+           color="grey",
+           size=1,
+           linetype="dashed")+
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0, ymax = 0.2),
+            fill = "red", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.2, ymax = 0.4),
+            fill = "yellow", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.4, ymax = 0.6),
+            fill = "green", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.6, ymax = 0.8),
+            fill = "dodgerblue3", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.8, ymax = 1),
+            fill = "purple4", alpha = 0.2, inherit.aes = FALSE)+
+  annotate("text",
+           x = 3,
+           y = c(0.1, 0.3, 0.5, 0.7, 0.9),
+           label = c("Strongly disagree",
+                     "Disagree",
+                     "Neutral",
+                     "Agree",
+                     "Strongly agree"),
+           hjust = 1,
+           size = 5) +
+  scale_x_continuous(breaks= -3:3)+
+  coord_cartesian(xlim= c(-3,3))+
+  scale_y_continuous(breaks= (0:5)/5,limits = c(0,1))+
+  ggplot2::labs(
+    title = "(b) Ordered Categorical Response",#sprintf("Item %i", item.number),
+    x = expression(theta),
+    y = "internal judgment scale")+
+  ggplot2::theme_bw()
+
+grid.arrange(grobs=list(ppp_cont,ppp_drm), ncol=2)
+```
+
+## Bounded-continuous response model
+
+The bounded-continuous response model is designed for responses that take
+values between 0 and 1. Let $x_{ij}$ denote the response of person $i$ to
+item $j$, and let $\theta_i$ denote the person's latent trait. The expected
+response is modeled as
+
+$$
+\operatorname{logit}(\mu_{ij})
+=
+a_j\theta_i+c_j,
+$$
+
+where
+
+$$
+\mu_{ij}
+=
+E(x_{ij}\mid\theta_i)
+=
+\frac{\exp(a_j\theta_i+c_j)}
+{1+\exp(a_j\theta_i+c_j)}.
+$$
+
+Here, $a_j$ is the item slope and $c_j$ is the item intercept. The slope
+determines how rapidly the expected response changes as the latent trait
+changes, whereas the intercept determines the location of the expected
+response curve. The latent trait can be multidimensional, and in such cases,
+$a$ and $\theta$ become $D$-dimensional vectors and $a_j\theta_i$ in the 
+above equation is substituted with an inner product 
+$\mathbf{a}_j\cdot\mathbf{\theta}_i=\sum_{d=1}^{D}a_{jd}\theta_{id}$.
+
+The response is then assumed to follow a beta distribution,
+
+$$
+x_{ij}\mid\theta_i
+\sim
+\operatorname{Beta}
+\left(
+\mu_{ij}\nu_j,
+(1-\mu_{ij})\nu_j
+\right),
+$$
+
+where $\nu_j>0$ is an item-specific precision parameter. Under this
+parameterization,
+
+$$
+\operatorname{Var}(x_{ij}\mid\theta_i)
+=
+\frac{\mu_{ij}(1-\mu_{ij})}{\nu_j+1}.
+$$
+
+The precision parameter controls how concentrated the responses are around
+their expected value. Larger values of $\nu_j$ correspond to greater
+precision and, therefore, less residual variation.
+
+The bounded-continuous model can therefore be understood in two parts. The
+logit equation describes the relationship between the latent trait and the
+expected response, while the beta distribution describes how individual
+responses vary around that expectation.
+
+## Discretized response model
+
+The **discretized response model (DRM)** extends the bounded-continuous
+model to ordered categorical responses. The key assumption is that an
+ordered categorical response arises by discretizing an underlying
+bounded-continuous judgment.
+
+For example, consider an item with five response categories:
+
+```text
+Strongly disagree | Disagree | Neutral | Agree | Strongly agree
+```
+
+DRM assumes that these categories correspond to five consecutive intervals
+on an underlying continuum from 0 to 1. Let the boundaries of these
+intervals be
+
+$$
+0=T_0<T_1<T_2<T_3<T_4<T_5=1.
+$$
+
+The underlying continuous response follows the same beta distribution as
+the bounded-continuous model. Therefore, for category $z$, the probability
+of observing that category is the probability that the underlying response
+falls within its corresponding interval:
+
+$$
+P(U_{ij}=z\mid\theta_i)
+=
+\int_{T_{z-1}}^{T_z}
+\operatorname{Beta}
+\left(x \mid
+\mu_{ij}\nu_j,
+(1-\mu_{ij})\nu_j
+\right)\,dx,
+$$
+
+where $\operatorname{Beta}\left(x \mid \mu_{ij}\nu_j,(1-\mu_{ij})\nu_j\right)$ is the beta density implied by the
+bounded-continuous model.
+
+For example, the probability of the fourth category is
+
+$$
+P(U_{ij}=4\mid\theta_i)
+=
+\int_{T_3}^{T_4}
+\operatorname{Beta}
+\left(x \mid
+\mu_{ij}\nu_j,
+(1-\mu_{ij})\nu_j
+\right)\,dx.
+$$
+
+Thus, the probability of a category is determined by both the underlying
+judgment distribution and the interval assigned to that category.
+
+
+## Relationship between the two models
+
+The two models share the same underlying logit-beta response process. Their
+difference is the observation mechanism.
+
+For the bounded-continuous response model, the underlying response is
+observed directly:
+
+$$
+\theta_i
+\longrightarrow
+\mu_{ij}
+\longrightarrow
+x_{ij}.
+$$
+
+For DRM, the same underlying response is discretized into ordered
+categories:
+
+$$
+\theta_i
+\longrightarrow
+\mu_{ij}
+\longrightarrow
+x_{ij}
+\longrightarrow
+U_{ij}.
+$$
+
+The first two stages are identical. The difference is that DRM introduces
+thresholds that divide the bounded continuum into intervals, and the
+observed category indicates which interval contains the underlying
+judgment.
+
+Consequently, DRM allows the latent-trait effects and the response
+categorization process to be represented separately: the latent trait
+determines the location and precision of the underlying judgment
+distribution, while the thresholds determine how that judgment is
+translated into an ordered response.
+

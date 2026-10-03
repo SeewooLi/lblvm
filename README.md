@@ -33,12 +33,15 @@ role, similar to its role in IRT.
 
 The framework accommodates both **bounded-continuous and ordered
 categorical responses**. Bounded-continuous responses can be naturally
-modeled using the beta distribution ([Li & Shin,
+modeled using the beta distribution (the extended two-parameter logistic
+\[E2PL\] model in [Li & Shin,
 2025](https://doi.org/10.1017/psy.2025.10044)). For ordered categorical
 responses, the **discretized response model (DRM)** assumes that
 observed categories arise through the discretization of an underlying
 bounded-continuous response process, with category probabilities
 determined by intervals on the bounded continuum (Li & Jeon, in review).
+DRM is suitable for answering research questions related to response
+category or scoring rubric.
 
 ## Package Overview
 

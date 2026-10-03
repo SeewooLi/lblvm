@@ -29,6 +29,9 @@ Imports:
 Config/roxygen2/version: 8.1.0
 RoxygenNote: 7.3.3
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://seewooli.github.io/lblvm/
+VignetteBuilder: knitr
