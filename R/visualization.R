@@ -1,3 +1,59 @@
+#' Plot Response Category Intervals for All Items
+#'
+#' Extracts the estimated response category thresholds from a fitted DRM
+#' object and creates a horizontal stacked bar plot of the response category
+#' intervals for each item. The resulting item-specific plots are combined
+#' into a single plot using [gridExtra::grid.arrange()].
+#'
+#' @param x A fitted DRM model object containing the estimated response
+#'   category thresholds in `x$par_est[[2]]` and, optionally, item names
+#'   in `x$Options$data`.
+#' @param ... Additional arguments passed to [gridExtra::grid.arrange()].
+#'   These can be used to control the arrangement and appearance of the
+#'   combined plots.
+#'
+#' @returns A combined plot displaying the response category intervals for
+#'   all items in `x`. Each item is represented by a horizontal stacked bar
+#'   whose segments correspond to the relative widths of its response
+#'   categories.
+#'
+#' @seealso
+#' [plot_DRM()] for plotting the response category intervals for a single
+#' item.
+#'
+#' @export
+plot.dr <- function(x, ...) {
+  item_names <- rownames(x$Options$data)
+
+  thresholds <- apply(
+    x$par_est[[2]][, -1],
+    1,
+    cut_trans,
+    simplify = FALSE
+  )
+
+  plts <- list()
+
+  for (i in seq_along(thresholds)) {
+    plts[[i]] <- plot_DRM(
+      thresholds[[i]],
+      if (is.null(item_names)) {
+        paste0("item", sprintf("%02d", i))
+      } else {
+        item_names[i]
+      }
+    )
+  }
+
+  gridExtra::grid.arrange(
+    grobs = plts,
+    ncol = 1,
+    ...
+  )
+}
+
+
+
 #' Plot Response Category Intervals
 #'
 #' Creates a horizontal stacked bar plot showing the relative widths of

@@ -158,7 +158,7 @@ fit_cont <- function(data, dimension=NULL, range=c(-4,4), q=11, t_prior=0.25, in
       initialitem[,1:dimension] <- sweep(initialitem[,1:dimension], 2, sds, FUN = "*")
       initialitem[,dimension+1] <- initialitem[,dimension+1] + initialitem[,1:dimension] %*% factor_means
     }
-
+    initialitem[is.na(par_id)] <- init[is.na(par_id)]
     if(!is.null(eq_constraint) & (max(eq_constraint)>0)){
       for(i in 1:max(eq_constraint)){
         initialitem[which(eq_constraint[,1:(dimension+1)]==i)] <- mean(initialitem[which(eq_constraint[,1:(dimension+1)]==i)])

@@ -145,7 +145,7 @@ transform_group <- function(data, group) {
     lab <- sort(unique(label))
     for(i in lab){
       data_temp <- data[label == i, , drop = FALSE]
-      t_sd_vec <- append(t_sd_vec, t_prior_sd(N = nrow(data_temp), category = apply(X = data_temp, MARGIN = 2, FUN = max)))
+      t_sd_vec <- append(t_sd_vec, t_prior_sd(N = nrow(data_temp), category = apply(X = data_temp, MARGIN = 2, FUN = max) + 1))
     }
     return(t_sd_vec)
   }

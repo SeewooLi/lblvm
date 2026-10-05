@@ -13,7 +13,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(ggplot2)
-library(tidyverse)
 library(gridExtra)
 ```
 
@@ -57,7 +56,7 @@ for(i in c(-2, -1, 0, 1, 2)){
   ddf2 <- data.frame(x=c(i-(dbeta(prob_irt, alpha, beta))*sqrt(prob_irt*(1-prob_irt))/2, i), y=rep(prob_irt,2))
 
   ppp <- ppp+
-    geom_path(data = ddf %>% arrange(x), aes(x = y, y = x),
+    geom_path(data = ddf[order(ddf$x), ], aes(x = y, y = x),
               linewidth=1, alpha = 1, inherit.aes = FALSE, color="darkgrey", linetype = "solid")+
     geom_path(data = ddf2, aes(x = x, y = y),
               linewidth=1, alpha = 1, inherit.aes = FALSE, color="darkgrey", linetype = "solid")

@@ -26,6 +26,7 @@ reference:
   - cut_trans
 - title: Visualization
   contents:
+  - plot.dr
   - plot_DRM
   - plot_DRM_compare
 

@@ -10,6 +10,13 @@ Provides tools for logit-beta latent variable modeling. The framework
 combines a logit link with the beta distribution to support latent
 variable models for bounded continuous and ordered categorical data.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://seewooli.github.io/lblvm/}
+}
+
+}
 \author{
 \strong{Maintainer}: Seewoo Li \email{seewooli@g.ucla.edu} (\href{https://orcid.org/0000-0002-6290-2777}{ORCID})
 

@@ -29,6 +29,7 @@ Imports:
 Config/roxygen2/version: 8.1.0
 RoxygenNote: 7.3.3
 Suggests: 
+    gridExtra,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

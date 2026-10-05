@@ -74,7 +74,7 @@ efa_drm <- function(data,dimension,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,ma
   # checking and reordering responses
   data <- check_data_cat(data)
 
-  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max))
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max) + 1)
 
   helper_matrices <- efa_helper_matrices(dimension, data, eq_interval = eq_interval)
 
@@ -195,9 +195,9 @@ cfa_drm <- function(formula,data,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,max_
   # checking and reordering responses
   data <- check_data_cat(data)
 
-  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max))
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max) + 1)
 
-  helper_matrices <- cfa_helper_matrices(formula, data, eq_interval = eq_interval)
+  helper_matrices <- cfa_helper_matrices(erase_comments(formula), data, eq_interval = eq_interval)
 
   fit <- dr_sim(data,
                 dimension = helper_matrices$d,
@@ -287,7 +287,7 @@ cfa_drm_mg <- function(formula,data,group,t_prior=NULL,range=c(-4,4),q=41,ngrid=
   group <- grouped$group_int
   if(is.null(t_prior)) t_prior <- grouped$t_prior
 
-  helper_matrices <- group_helper_matrices(formula,
+  helper_matrices <- group_helper_matrices(erase_comments(formula),
                                            data,
                                            eq_interval = eq_interval,
                                            ngroup = length(unique(group)),

@@ -1,3 +1,11 @@
+erase_comments <- function(x) {
+  paste(
+    sub("#.*$", "", strsplit(x, "\n", fixed = TRUE)[[1]]),
+    collapse = "\n"
+  )
+}
+
+
 build_loading_matrix <- function(formula_string, variable_order = NULL) {
   # Split the formula string into lines
   lines <- unlist(strsplit(formula_string, "\n"))
@@ -119,7 +127,8 @@ apply_equal_constraints_seq <- function(param_id_mat, eq_mat) {
 
   # Build graph of equal constraints
   if (!is.null(edge_list)) {
-    g <- igraph::graph_from_edgelist(apply(edge_list, 2, as.character), directed = FALSE)
+    storage.mode(edge_list) <- "character"
+    g <- igraph::graph_from_edgelist(edge_list, directed = FALSE)
   } else {
     g <- igraph::make_empty_graph()
   }

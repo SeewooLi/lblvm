@@ -122,7 +122,7 @@ cfa_cont <- function(formula,data,range=c(-4,4),q=41,max_iter=200,
   # checking and reordering responses
   data <- check_data_cont(data)
 
-  helper_matrices <- cfa_helper_matrices_cont(formula, data)
+  helper_matrices <- cfa_helper_matrices_cont(erase_comments(formula), data)
 
   fit <- fit_cont(data,
                   dimension = helper_matrices$d,
