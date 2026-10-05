@@ -32,6 +32,13 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/Examples.html">Examples</a></li>
+    <li><a class="dropdown-item" href="articles/Models.html">Models</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -55,7 +62,7 @@
 </h2>
 <p>The <strong>logit-beta latent variable modeling (lblvm) framework</strong> can be viewed alongside two well-established latent variable modeling traditions: <strong>factor analysis (FA)</strong> and <strong>item response theory (IRT)</strong>. Conventional FA models are typically formulated with an identity link and the normally distribution, whereas IRT generally uses a logit link (or a probit link) with the Bernoulli or the categorical distribution.</p>
 <p>The underlying premise of the logit-beta framework is parallel to that of FA and IRT: observed responses can be interpreted as manifestations of one or more <strong>unobserved continuous latent variables</strong>. The framework is conceptually similar to FA in modeling responses with a continuous probability distribution, while sharing with IRT the property of <strong>mean-dependent conditional variance</strong>. Unlike the homoscedastic normal distribution typically used in FA, the variance of a beta distribution depends on its mean. As a result, the intercept plays a more prominent role, similar to its role in IRT.</p>
-<p>The framework accommodates both <strong>bounded-continuous and ordered categorical responses</strong>. Bounded-continuous responses can be naturally modeled using the beta distribution (<a href="https://doi.org/10.1017/psy.2025.10044" class="external-link">Li &amp; Shin, 2025</a>). For ordered categorical responses, the <strong>discretized response model (DRM)</strong> assumes that observed categories arise through the discretization of an underlying bounded-continuous response process, with category probabilities determined by intervals on the bounded continuum (Li &amp; Jeon, in review).</p>
+<p>The framework accommodates both <strong>bounded-continuous and ordered categorical responses</strong>. Bounded-continuous responses can be naturally modeled using the beta distribution (the extended two-parameter logistic [E2PL] model in <a href="https://doi.org/10.1017/psy.2025.10044" class="external-link">Li &amp; Shin, 2025</a>). For ordered categorical responses, the <strong>discretized response model (DRM)</strong> assumes that observed categories arise through the discretization of an underlying bounded-continuous response process, with category probabilities determined by intervals on the bounded continuum (Li &amp; Jeon, in review). DRM is suitable for answering research questions related to response category or scoring rubric.</p>
 </div>
 <div class="section level2">
 <h2 id="package-overview">Package Overview<a class="anchor" aria-label="anchor" href="#package-overview"></a>

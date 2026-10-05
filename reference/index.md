@@ -46,6 +46,8 @@ Parameter estimation.
 
 ## Visualization
 
+- [`plot(`*`<dr>`*`)`](https://seewooli.github.io/lblvm/reference/plot.dr.md)
+  : Plot Response Category Intervals for All Items
 - [`plot_DRM()`](https://seewooli.github.io/lblvm/reference/plot_DRM.md)
   : Plot Response Category Intervals
 - [`plot_DRM_compare()`](https://seewooli.github.io/lblvm/reference/plot_DRM_compare.md)
