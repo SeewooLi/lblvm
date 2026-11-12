@@ -11,7 +11,7 @@
 category thresholds in \code{x$par_est[[2]]} and, optionally, item names
 in \code{x$Options$data}.}
 
-\item{...}{Additional arguments passed to \code{\link[gridExtra:arrangeGrob]{gridExtra::grid.arrange()}}.
+\item{...}{Additional arguments passed to \code{\link[gridExtra:grid.arrange]{gridExtra::grid.arrange()}}.
 These can be used to control the arrangement and appearance of the
 combined plots.}
 }
@@ -25,7 +25,7 @@ categories.
 Extracts the estimated response category thresholds from a fitted DRM
 object and creates a horizontal stacked bar plot of the response category
 intervals for each item. The resulting item-specific plots are combined
-into a single plot using \code{\link[gridExtra:arrangeGrob]{gridExtra::grid.arrange()}}.
+into a single plot using \code{\link[gridExtra:grid.arrange]{gridExtra::grid.arrange()}}.
 }
 \seealso{
 \code{\link[=plot_DRM]{plot_DRM()}} for plotting the response category intervals for a single

@@ -1,4 +1,8 @@
 ICOMP <- function(logL, Sigma) {
+  if (any(!is.finite(Sigma))) {
+    return(NA_real_)
+  }
+
   ev <- eigen(Sigma, symmetric = TRUE)$values
   s <- length(ev)
 

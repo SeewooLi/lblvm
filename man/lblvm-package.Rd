@@ -20,4 +20,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Seewoo Li \email{seewooli@g.ucla.edu} (\href{https://orcid.org/0000-0002-6290-2777}{ORCID})
 
+Authors:
+\itemize{
+  \item Seewoo Li \email{seewooli@g.ucla.edu} (\href{https://orcid.org/0000-0002-6290-2777}{ORCID})
+}
+
 }

@@ -74,7 +74,7 @@ efa_drm <- function(data,dimension,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,ma
   # checking and reordering responses
   data <- check_data_cat(data)
 
-  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max) + 1)
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = function(x)max(x,na.rm = TRUE)) + 1)
 
   helper_matrices <- efa_helper_matrices(dimension, data, eq_interval = eq_interval)
 
@@ -195,7 +195,7 @@ cfa_drm <- function(formula,data,t_prior=NULL,range=c(-4,4),q=41,ngrid=1000,max_
   # checking and reordering responses
   data <- check_data_cat(data)
 
-  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = max) + 1)
+  if(is.null(t_prior)) t_prior <- t_prior_sd(N = nrow(data), category = apply(X = data, MARGIN = 2, FUN = function(x)max(x,na.rm = TRUE)) + 1)
 
   helper_matrices <- cfa_helper_matrices(erase_comments(formula), data, eq_interval = eq_interval)
 

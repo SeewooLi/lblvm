@@ -53,7 +53,7 @@ check_data_cont <- function(data) {
     stop("`data` must be a matrix or data frame.")
   }
 
-  if (any(data < 0 | data > 1)) {
+  if (any(data < 0 | data > 1, na.rm = TRUE)) {
     stop("All values in `data` must be between 0 and 1.")
   }
 
@@ -66,7 +66,7 @@ check_data_cat <- function(data) {
     stop("`data` must be a matrix or data frame.")
   }
 
-  if (any(data <= 0) || any(data != floor(data))) {
+  if (any(data <= 0, na.rm = TRUE) || any(data != floor(data), na.rm = TRUE)) {
     stop("All values in `data` must be positive integers.")
   }
 
@@ -145,7 +145,7 @@ transform_group <- function(data, group) {
     lab <- sort(unique(label))
     for(i in lab){
       data_temp <- data[label == i, , drop = FALSE]
-      t_sd_vec <- append(t_sd_vec, t_prior_sd(N = nrow(data_temp), category = apply(X = data_temp, MARGIN = 2, FUN = max) + 1))
+      t_sd_vec <- append(t_sd_vec, t_prior_sd(N = nrow(data_temp), category = apply(X = data_temp, MARGIN = 2, FUN = function(x)max(x,na.rm = TRUE)) + 1))
     }
     return(t_sd_vec)
   }
