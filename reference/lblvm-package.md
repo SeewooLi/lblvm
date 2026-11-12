@@ -14,3 +14,8 @@ Useful links:
 
 **Maintainer**: Seewoo Li <seewooli@g.ucla.edu>
 ([ORCID](https://orcid.org/0000-0002-6290-2777))
+
+Authors:
+
+- Seewoo Li <seewooli@g.ucla.edu>
+  ([ORCID](https://orcid.org/0000-0002-6290-2777))
